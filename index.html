@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>狩猟者登録料金計算</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#F2F4EF; --surface:#FFFFFF; --surface-2:#E9EDE4;
+  --ink:#1C261F; --ink-2:#4F5B52; --ink-3:#7C877E; --line:#CFD6CB;
+  --accent:#2E6A3B; --accent-ink:#FFFFFF; --accent-soft:#DCEBDD;
+  --red:#B8322A; --red-soft:#F6E1DE; --blue:#2A5FA8; --blue-soft:#DEE7F5;
+  --amber:#8A5A0E; --amber-soft:#F6EAD2;
+  --focus:#2E6A3B;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151A16; --surface:#1F2620; --surface-2:#28312A;
+    --ink:#E8ECE5; --ink-2:#B4BDB3; --ink-3:#818B82; --line:#3A453C;
+    --accent:#6FB27C; --accent-ink:#0F1A12; --accent-soft:#25382A;
+    --red:#F08A82; --red-soft:#3E2523; --blue:#8FB4F0; --blue-soft:#22304A;
+    --amber:#E4B45C; --amber-soft:#3B2F17;
+    --focus:#6FB27C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151A16; --surface:#1F2620; --surface-2:#28312A;
+  --ink:#E8ECE5; --ink-2:#B4BDB3; --ink-3:#818B82; --line:#3A453C;
+  --accent:#6FB27C; --accent-ink:#0F1A12; --accent-soft:#25382A;
+  --red:#F08A82; --red-soft:#3E2523; --blue:#8FB4F0; --blue-soft:#22304A;
+  --amber:#E4B45C; --amber-soft:#3B2F17;
+  --focus:#6FB27C;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"BIZ UDPGothic","BIZ UDGothic","UD Digi Kyokasho NP-R","Meiryo UI","Hiragino Sans",sans-serif;
+  font-size:16px; line-height:1.6;
+  padding-block:24px 48px; padding-inline:16px;
+}
+.wrap{max-width:560px; margin-inline:auto; display:flex; flex-direction:column; gap:20px}
+header h1{font-size:1.35rem; margin:0; line-height:1.3; text-wrap:balance}
+header .sub{margin:4px 0 0; color:var(--ink-2); font-size:.9rem}
+.steps{display:flex; gap:6px; margin:0; padding:0; list-style:none}
+.steps li{flex:1; height:6px; border-radius:3px; background:var(--line)}
+.steps li.done{background:var(--accent)}
+.steps li.now{background:var(--accent); opacity:.55}
+.answers{display:flex; flex-wrap:wrap; gap:8px; min-height:0}
+.chip{
+  font-size:.85rem; padding:4px 10px; border-radius:999px;
+  background:var(--surface-2); color:var(--ink-2); border:1px solid var(--line);
+}
+.chip.red{background:var(--red-soft); color:var(--red); border-color:transparent}
+.chip.blue{background:var(--blue-soft); color:var(--blue); border-color:transparent}
+.chip.green{background:var(--accent-soft); color:var(--accent); border-color:transparent}
+.chip.amber{background:var(--amber-soft); color:var(--amber); border-color:transparent}
+.panel{
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:24px 20px; display:flex; flex-direction:column; gap:18px;
+}
+.q-label{font-size:.8rem; letter-spacing:.06em; color:var(--ink-3); text-transform:uppercase; margin:0}
+.q{font-size:1.25rem; font-weight:700; margin:0; line-height:1.4; text-wrap:balance}
+.help{margin:0; color:var(--ink-2); font-size:.92rem}
+.explain{
+  margin:0; padding:12px 14px; border-radius:10px; background:var(--surface-2);
+  color:var(--ink-2); font-size:.88rem; line-height:1.6;
+}
+.explain p{margin:0 0 6px}
+.explain p:last-child{margin-bottom:0}
+.explain b{color:var(--ink)}
+.choices{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.choices.col{grid-template-columns:1fr}
+button{font:inherit; cursor:pointer}
+.btn{
+  border:1.5px solid var(--line); background:var(--surface); color:var(--ink);
+  border-radius:12px; padding:16px 14px; font-size:1.1rem; font-weight:700;
+  text-align:center; transition:background .12s, border-color .12s;
+}
+.btn.opt{
+  display:grid; grid-template-columns:1fr auto; align-items:center; gap:4px 12px;
+  text-align:left; padding:12px 16px;
+}
+.btn.opt .name{font-size:1.05rem}
+.btn.opt .price{font-size:1.05rem; font-variant-numeric:tabular-nums; white-space:nowrap}
+.btn.opt .desc{grid-column:1 / -1; font-size:.85rem; font-weight:400; color:var(--ink-2); line-height:1.5}
+.btn.pressed .desc{color:inherit; opacity:.9}
+.btn:hover{background:var(--surface-2)}
+.btn:focus-visible, .check:focus-within, .link:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.pressed, .btn.pressed:hover{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn.pressed:disabled{opacity:1}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.check{
+  display:flex; align-items:center; gap:14px; border:1.5px solid var(--line);
+  background:var(--surface); border-radius:12px; padding:14px 16px; cursor:pointer;
+}
+.check input{width:22px; height:22px; margin:0; accent-color:var(--accent); flex:none}
+.check .t{font-weight:700; font-size:1.05rem}
+.check .s{color:var(--ink-2); font-size:.85rem; display:block}
+.check:has(input:checked){border-color:var(--accent); background:var(--accent-soft)}
+.nav{display:flex; justify-content:space-between; align-items:center; gap:10px}
+.link{border:0; background:none; color:var(--ink-2); padding:8px 4px; font-size:.95rem; text-decoration:underline; text-underline-offset:3px}
+.link:hover{color:var(--ink)}
+.total{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:18px 20px; border-radius:12px; background:var(--accent); color:var(--accent-ink);
+}
+.total .l{font-size:1rem; font-weight:700}
+.total .v{font-size:2.2rem; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.1}
+.total .v small{font-size:1.1rem; margin-left:2px}
+.subtotal{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:12px 20px; border-radius:12px; background:var(--surface-2); color:var(--ink);
+}
+.subtotal .l{font-size:.95rem; font-weight:700; color:var(--ink-2)}
+.subtotal .v{font-size:1.5rem; font-weight:700; font-variant-numeric:tabular-nums}
+.subtotal .v small{font-size:.95rem; margin-left:2px}
+table{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums}
+th,td{padding:10px 4px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top}
+td.n,th.n{text-align:right; white-space:nowrap}
+tr.sum td{font-weight:700; border-bottom:2px solid var(--ink)}
+tr.grand td{font-weight:700; font-size:1.05rem; border-bottom:2px solid var(--ink)}
+tr.extra td{color:var(--ink-2)}
+tr.sect td{padding-top:16px; font-size:.8rem; letter-spacing:.06em; color:var(--ink-3); border-bottom:0}
+td .note{display:block; font-size:.82rem; color:var(--ink-3); font-weight:400}
+.row-name{font-size:.95rem; color:var(--ink-2); margin:0}
+.row-name b{color:var(--ink)}
+.foot{font-size:.82rem; color:var(--ink-3); line-height:1.6}
+.foot p{margin:0 0 6px}
+@media (max-width:420px){ .choices{grid-template-columns:1fr} .total .v{font-size:1.9rem} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>狩猟者登録料金計算</h1>
+    <p class="sub">令和8年度 兵庫県・丹波市猟友会市島町支部</p>
+  </header>
+
+  <ul class="steps" id="steps" aria-hidden="true">
+    <li></li><li></li><li></li><li></li><li></li><li></li>
+  </ul>
+  <div class="answers" id="answers" aria-live="polite"></div>
+
+  <!-- Q1 -->
+  <section class="panel" id="q1">
+    <p class="q-label">質問 1 / 6</p>
+    <h2 class="q">あなたは、今年から会員になる新規会員ですか？</h2>
+    <p class="help">新規会員は初心者の入会金（町）5,000円が加わります。</p>
+    <div class="choices">
+      <button class="btn" id="q1-yes" type="button">はい</button>
+      <button class="btn" id="q1-no" type="button">いいえ</button>
+    </div>
+  </section>
+
+  <!-- Q2 -->
+  <section class="panel" id="q2" hidden>
+    <p class="q-label">質問 2 / 6</p>
+    <h2 class="q">どの狩猟の種別を登録しますか？</h2>
+    <p class="help">複数選択できます。</p>
+    <div class="choices col">
+      <label class="check"><input type="checkbox" id="t-ami"><span><span class="t">網猟</span><span class="s">旧種別 甲</span></span></label>
+      <label class="check"><input type="checkbox" id="t-wana"><span><span class="t">わな猟</span><span class="s">旧種別 甲</span></span></label>
+      <label class="check"><input type="checkbox" id="t-gun1"><span><span class="t">第1種銃猟</span><span class="s">旧種別 乙（装薬銃・空気銃）</span></span></label>
+      <label class="check"><input type="checkbox" id="t-gun2"><span><span class="t">第2種銃猟</span><span class="s">旧種別 丙（空気銃のみ）</span></span></label>
+    </div>
+    <p class="help" id="q2-note" hidden>第1種銃猟は第2種の範囲を含むため、第1種と第2種を両方選んでも登録手数料と狩猟税は第1種の1件分で計算します（表の「1種と2種」欄と同じ）。</p>
+    <div class="nav">
+      <button class="link" id="q2-back" type="button">戻る</button>
+      <button class="btn primary" id="q2-next" type="button" disabled>次へ</button>
+    </div>
+  </section>
+
+  <!-- Q3 -->
+  <section class="panel" id="q3" hidden>
+    <p class="q-label">質問 3 / 6</p>
+    <h2 class="q">非課税証明書はありますか？</h2>
+    <p class="help">県民税の所得割の非課税証明書です。同じ県内でも申請物件ごとに証明が必要です。第2種銃猟のみの場合、あり・なしで金額は変わりません。</p>
+    <div class="choices">
+      <button class="btn" id="q3-yes" type="button">あり</button>
+      <button class="btn" id="q3-no" type="button">なし</button>
+    </div>
+    <div class="nav"><button class="link" id="q3-back" type="button">戻る</button><span></span></div>
+  </section>
+
+  <!-- Q4 -->
+  <section class="panel" id="q4" hidden>
+    <p class="q-label">質問 4 / 6</p>
+    <h2 class="q">入猟税軽減措置の対象ですか？</h2>
+    <p class="help">有害鳥獣捕獲の許可がある方が対象です。</p>
+    <div class="choices">
+      <button class="btn" id="q4-yes" type="button">対象です</button>
+      <button class="btn" id="q4-no" type="button">対象ではありません</button>
+    </div>
+    <div class="nav"><button class="link" id="q4-back" type="button">戻る</button><span></span></div>
+  </section>
+
+  <!-- Q5 ハンター補償 -->
+  <section class="panel" id="q5" hidden>
+    <p class="q-label">質問 5 / 6</p>
+    <h2 class="q">ハンター補償の保険に加入しますか？</h2>
+    <div class="explain">
+      <p><b>総合生活保険（ハンター補償）</b>　東京海上日動・年間保険料一時払</p>
+      <p>狩猟または射撃場での射撃の目的で家を出てから帰るまでの間に、急激かつ偶然な外来の事故でケガをした場合に、死亡・後遺障害保険金、入院・通院の日額を受け取れます。</p>
+      <p>あわせて、銃器によって起きた事故や、狩猟中に猟犬が起こした事故で他人にケガをさせたり物を壊したりして法律上の賠償責任を負った場合の補償（個人賠償責任補償・狩猟中等限定、国内5億円、免責0円）が全タイプに付きます。</p>
+      <p>狩猟免許を受けずに狩猟している間の事故や、許可なく所持している銃器による事故は対象外です。</p>
+    </div>
+    <div class="choices col">
+      <button class="btn opt" id="q5-none" type="button"><span class="name">加入しない</span><span class="price"></span></button>
+      <button class="btn opt" id="q5-a" type="button"><span class="name">Aタイプ</span><span class="price">7,690円</span><span class="desc">死亡・後遺障害 500万円／入院・通院 日額5,000円／賠償 国内5億円</span></button>
+      <button class="btn opt" id="q5-b" type="button"><span class="name">Bタイプ</span><span class="price">6,290円</span><span class="desc">死亡・後遺障害 300万円／入院・通院 日額3,000円／賠償 国内5億円</span></button>
+      <button class="btn opt" id="q5-c" type="button"><span class="name">Cタイプ</span><span class="price">4,900円</span><span class="desc">死亡・後遺障害 100万円／入院・通院 日額1,000円／賠償 国内5億円</span></button>
+    </div>
+    <div class="nav"><button class="link" id="q5-back" type="button">戻る</button><span></span></div>
+  </section>
+
+  <!-- Q6 個人賠償責任補償 -->
+  <section class="panel" id="q6" hidden>
+    <p class="q-label">質問 6 / 6</p>
+    <h2 class="q">個人賠償責任補償の保険に加入しますか？</h2>
+    <div class="explain">
+      <p><b>総合生活保険（個人賠償責任補償特約・家族型）</b>　東京海上日動・年間保険料一時払</p>
+      <p>狩猟中に限らず、日常生活での偶然な事故で他人にケガをさせたり他人の物を壊したりして法律上の賠償責任を負った場合の補償です。家族型のため、本人だけでなく家族も対象になります（免責0円）。</p>
+      <p>銃器や猟犬による狩猟中の事故は、上のハンター補償に付く賠償責任補償（狩猟中等限定）が対応します。両方に加入すると、狩猟中の賠償と日常生活の賠償の両方に備えられます。</p>
+    </div>
+    <div class="choices col">
+      <button class="btn opt" id="q6-none" type="button"><span class="name">加入しない</span><span class="price"></span></button>
+      <button class="btn opt" id="q6-a" type="button"><span class="name">Aタイプ</span><span class="price">2,380円</span><span class="desc">支払限度額 国内1億円・国外1億円</span></button>
+      <button class="btn opt" id="q6-b" type="button"><span class="name">Bタイプ</span><span class="price">2,670円</span><span class="desc">支払限度額 国内3億円・国外1億円</span></button>
+    </div>
+    <div class="nav"><button class="link" id="q6-back" type="button">戻る</button><span></span></div>
+  </section>
+
+  <!-- Result -->
+  <section class="panel" id="result" hidden>
+    <p class="q-label">計算結果</p>
+    <div class="subtotal"><span class="l">保険を選ぶ前の合計</span><span class="v" id="r-before">0<small>円</small></span></div>
+    <div class="total"><span class="l">保険を含めた総額</span><span class="v" id="r-total">0<small>円</small></span></div>
+    <p class="row-name" id="r-row"></p>
+    <table>
+      <thead><tr><th>項目</th><th class="n">金額（円）</th></tr></thead>
+      <tbody>
+        <tr class="sect"><td colspan="2">狩猟者登録</td></tr>
+        <tr><td>登録手数料<span class="note" id="r-reg-note"></span></td><td class="n" id="r-reg"></td></tr>
+        <tr><td>狩猟者登録税・入猟税<span class="note" id="r-tax-note"></span></td><td class="n" id="r-tax"></td></tr>
+        <tr><td>町猟友会費<span class="note">共猟会費含む</span></td><td class="n" id="r-assoc"></td></tr>
+        <tr class="extra" id="r-entry-row"><td>初心者の入会金（町）<span class="note">新規会員のみ</span></td><td class="n" id="r-entry"></td></tr>
+        <tr class="sum"><td>保険を選ぶ前の合計</td><td class="n" id="r-before-t"></td></tr>
+        <tr class="sect"><td colspan="2">保険（年間保険料・一時払）</td></tr>
+        <tr><td>ハンター補償<span class="note" id="r-hunter-note"></span></td><td class="n" id="r-hunter"></td></tr>
+        <tr><td>個人賠償責任補償（家族型）<span class="note" id="r-liab-note"></span></td><td class="n" id="r-liab"></td></tr>
+        <tr class="grand"><td>保険を含めた総額</td><td class="n" id="r-total-t"></td></tr>
+      </tbody>
+    </table>
+    <div class="nav">
+      <button class="link" id="r-back" type="button">戻る</button>
+      <button class="btn" id="r-reset" type="button">最初から</button>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p>「令和8年度狩猟者登録料金表（兵庫県）」および東京海上日動 総合生活保険（ハンター補償・個人賠償責任補償）加入依頼書の保険料に基づき計算しています。</p>
+    <p>低税率適用者のうち、所得割額の納付をされている人の被扶養者の方は農林業務でなければ軽減の対象になりません。</p>
+    <p>登録手数料 1,800円／件、町猟友会費 5,000円、狩猟税は網・わな 各8,200円（非課税 5,500円）・第1種銃猟 16,500円（非課税 11,000円）・第2種銃猟 5,500円、軽減措置は種別ごとに2分の1（100円未満切り捨て）。</p>
+    <p>保険の補償内容の詳細は重要事項説明書をご確認ください。</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const REG_FEE = 1800, ASSOC_FEE = 5000, ENTRY_FEE = 5000;
+  const TAX = {
+    ami:  { name:'網', normal:8200,  exempt:5500 },
+    wana: { name:'わな', normal:8200,  exempt:5500 },
+    gun1: { name:'第1種銃猟', normal:16500, exempt:11000 },
+    gun2: { name:'第2種銃猟', normal:5500,  exempt:5500 },
+  };
+  const HUNTER = { none:{name:'加入しない', price:0}, a:{name:'Aタイプ', price:7690}, b:{name:'Bタイプ', price:6290}, c:{name:'Cタイプ', price:4900} };
+  const LIAB   = { none:{name:'加入しない', price:0}, a:{name:'Aタイプ', price:2380}, b:{name:'Bタイプ', price:2670} };
+  const floor100 = v => Math.floor(v/100)*100;
+  const yen = v => v.toLocaleString('ja-JP');
+  const TYPES = ['ami','wana','gun1','gun2'];
+
+  function calc(s){
+    const items = [];
+    if (s.ami) items.push('ami');
+    if (s.wana) items.push('wana');
+    if (s.gun1) items.push('gun1');
+    if (s.gun2 && !s.gun1) items.push('gun2');
+    const regs = items.length;
+    let tax = 0; const detail = [];
+    for (const k of items){
+      let v = s.exempt ? TAX[k].exempt : TAX[k].normal;
+      if (s.reduced) v = floor100(v/2);
+      tax += v; detail.push(TAX[k].name + ' ' + yen(v));
+    }
+    const regFee = REG_FEE * regs;
+    const entry = s.newMember ? ENTRY_FEE : 0;
+    const before = regFee + tax + ASSOC_FEE + entry;
+    const hunter = HUNTER[s.hunter || 'none'].price;
+    const liab = LIAB[s.liab || 'none'].price;
+    return { regs, regFee, tax, detail, assoc: ASSOC_FEE, entry, before, hunter, liab, total: before + hunter + liab };
+  }
+
+  function rowName(s){
+    const parts = [];
+    if (s.ami) parts.push('網');
+    if (s.wana) parts.push('わな');
+    if (s.gun1) parts.push('1種');
+    if (s.gun2) parts.push('2種');
+    let n = parts.join('と');
+    if (parts.length===1) n = ({'網':'網','わな':'わな','1種':'第1種銃猟','2種':'第2種銃猟'})[n];
+    return n;
+  }
+
+  const state = { step:1, newMember:null, ami:false, wana:false, gun1:false, gun2:false, exempt:null, reduced:null, hunter:null, liab:null };
+  const $ = id => document.getElementById(id);
+  const panels = ['q1','q2','q3','q4','q5','q6','result'];
+
+  function render(){
+    panels.forEach((p,i)=>{ $(p).hidden = (i+1)!==state.step; });
+    [...$('steps').children].forEach((li,i)=>{
+      li.className = (i+1)<state.step ? 'done' : (i+1)===state.step ? 'now' : '';
+    });
+    const chips = [];
+    if (state.newMember!==null) chips.push(['green', state.newMember ? '新規会員' : '継続会員']);
+    if (state.step>2 && TYPES.some(k=>state[k])) chips.push(['', rowName(state)]);
+    if (state.exempt!==null) chips.push(state.exempt ? ['blue','非課税証明書あり'] : ['','非課税証明書なし']);
+    if (state.reduced!==null) chips.push(state.reduced ? ['red','軽減措置対象'] : ['','軽減措置なし']);
+    if (state.hunter!==null) chips.push(state.hunter==='none' ? ['','ハンター補償なし'] : ['amber','ハンター補償 '+HUNTER[state.hunter].name]);
+    if (state.liab!==null) chips.push(state.liab==='none' ? ['','個人賠償なし'] : ['amber','個人賠償 '+LIAB[state.liab].name]);
+    $('answers').innerHTML = chips.map(([c,t])=>`<span class="chip ${c}">${t}</span>`).join('');
+    $('q2-next').disabled = !TYPES.some(k=>state[k]);
+    $('q2-note').hidden = !(state.gun1 && state.gun2);
+    if (state.step===7) renderResult();
+    try{ window.claude?.hot?.snapshot?.(state); }catch(e){}
+  }
+
+  function renderResult(){
+    const r = calc(state);
+    $('r-before').innerHTML = yen(r.before) + '<small>円</small>';
+    $('r-total').innerHTML = yen(r.total) + '<small>円</small>';
+    $('r-reg').textContent = yen(r.regFee);
+    $('r-reg-note').textContent = r.regs + '件 × 1,800円';
+    $('r-tax').textContent = yen(r.tax);
+    $('r-tax-note').textContent = r.detail.join(' ＋ ') + (state.reduced ? '（軽減後）' : '');
+    $('r-assoc').textContent = yen(r.assoc);
+    $('r-entry-row').hidden = !state.newMember;
+    $('r-entry').textContent = yen(r.entry);
+    $('r-before-t').textContent = yen(r.before);
+    $('r-hunter').textContent = yen(r.hunter);
+    $('r-hunter-note').textContent = HUNTER[state.hunter || 'none'].name;
+    $('r-liab').textContent = yen(r.liab);
+    $('r-liab-note').textContent = LIAB[state.liab || 'none'].name;
+    $('r-total-t').textContent = yen(r.total);
+    const tags = [];
+    if (state.exempt) tags.push('非課税証明書あり');
+    tags.push(state.reduced ? '赤字（軽減措置申請者）料金' : '黒字（通常）料金');
+    $('r-row').innerHTML = '料金表の欄：<b>' + rowName(state) + '</b>　' + tags.join('・');
+  }
+
+  function go(step){ state.step = step; render(); window.scrollTo({top:0, behavior:'smooth'}); }
+  // 押したボタンを緑にして、0.5秒後に次の画面へ進む
+  function press(btn, fn){
+    const group = btn.closest('.choices') || btn.parentElement;
+    const siblings = [...group.querySelectorAll('button')];
+    siblings.forEach(b => b.disabled = true);
+    btn.classList.add('pressed');
+    setTimeout(()=>{
+      fn();
+      btn.classList.remove('pressed');
+      siblings.forEach(b => b.disabled = false);
+      if (group.contains($('q2-next'))) $('q2-next').disabled = !TYPES.some(k=>state[k]);
+    }, 500);
+  }
+
+  $('q1-yes').onclick = e=>press(e.currentTarget, ()=>{ state.newMember=true;  go(2); });
+  $('q1-no').onclick  = e=>press(e.currentTarget, ()=>{ state.newMember=false; go(2); });
+  TYPES.forEach(k=>{ $('t-'+k).onchange = e => { state[k]=e.target.checked; render(); }; });
+  $('q2-back').onclick = ()=>go(1);
+  $('q2-next').onclick = e=>press(e.currentTarget, ()=>go(3));
+  $('q3-yes').onclick = e=>press(e.currentTarget, ()=>{ state.exempt=true;  go(4); });
+  $('q3-no').onclick  = e=>press(e.currentTarget, ()=>{ state.exempt=false; go(4); });
+  $('q3-back').onclick = ()=>go(2);
+  $('q4-yes').onclick = e=>press(e.currentTarget, ()=>{ state.reduced=true;  go(5); });
+  $('q4-no').onclick  = e=>press(e.currentTarget, ()=>{ state.reduced=false; go(5); });
+  $('q4-back').onclick = ()=>go(3);
+  ['none','a','b','c'].forEach(k=>{ $('q5-'+k).onclick = e=>press(e.currentTarget, ()=>{ state.hunter=k; go(6); }); });
+  $('q5-back').onclick = ()=>go(4);
+  ['none','a','b'].forEach(k=>{ $('q6-'+k).onclick = e=>press(e.currentTarget, ()=>{ state.liab=k; go(7); }); });
+  $('q6-back').onclick = ()=>go(5);
+  $('r-back').onclick = ()=>go(6);
+  $('r-reset').onclick = ()=>{
+    Object.assign(state,{ step:1, newMember:null, ami:false, wana:false, gun1:false, gun2:false, exempt:null, reduced:null, hunter:null, liab:null });
+    TYPES.forEach(k=>{ $('t-'+k).checked=false; });
+    go(1);
+  };
+
+  function start(saved){
+    if (saved && typeof saved.step==='number'){
+      Object.assign(state, saved);
+      if (state.step>7) state.step = 7;
+      TYPES.forEach(k=>{ $('t-'+k).checked = !!state[k]; });
+    }
+    render();
+  }
+  if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window.claude?.hot?.data ?? null);
+})();
+</script>
+
+</body>
+</html>
